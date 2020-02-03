@@ -1,0 +1,32 @@
+ for region in ec2_client.describe_regions()['Regions']:
+            reg = region['RegionName']
+            client = boto3.client('ec2', region_name=reg)
+            
+            ec2 = boto3.resource('ec2', region_name=reg)
+            instances = ec2.instances.filter(Filters=[{'Name': 'instance-state-name', 'Values': ['running']}])
+            
+            client = boto3.client('cloudwatch')
+            endTime = datetime.now()
+            startTime = endTime - timedelta(hours=24)
+            for instance in instances:
+                print(startTime)
+                print(endTime)
+                response = client.get_metric_statistics(
+                    Namespace='AWS/EC2',
+                    MetricName='CPUUtilization',
+                    Dimensions=[
+                        {
+                            'Name': 'InstanceId',
+                            'Value': instance.id
+                        },
+                    ],
+                    StartTime=startTime,
+                    EndTime=endTime,
+                    Period=21600,
+                    Statistics=[
+                        'Average',
+                    ],
+                    Unit='Percent'
+                )
+                print(instance.id)
+                print(response)
